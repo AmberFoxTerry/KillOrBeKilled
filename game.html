@@ -1,83 +1,53 @@
 <!DOCTYPE html>
-<html lang="en">
 
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
->
-
-<title>game</title>
-
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>KillOrBeKilled</title>
 
 <style>
-
 * {
-    box-sizing: border-box;
     margin: 0;
     padding: 0;
-}
-
-html,
-body {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-
-body {
-    background: black;
+    box-sizing: border-box;
     touch-action: none;
 }
 
-
-/* =========================
-   GAME AREA
-========================= */
-
-#game {
-    position: fixed;
-
-    left: 0;
-    top: 0;
-
-    width: 100vw;
-    height: 100vh;
-
+html, body {
+    width: 100%;
+    height: 100%;
     overflow: hidden;
-
-    background:
-        url("assets/ui/background.png")
-        center / cover no-repeat;
+    background: #111;
 }
 
+body {
+    position: relative;
+    font-family: Arial, sans-serif;
+}
 
 /* =========================
-   GAME SCALE
+   GAME
 ========================= */
 
 #world {
     position: absolute;
 
+    width: 100%;
+    height: 100%;
+
     left: 50%;
     top: 50%;
 
-    width: 0;
-    height: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+    transform-origin: center center;
 
-    transform:
-        translate(-50%, -50%)
-        scale(0.5);
-
-    transform-origin: center;
+    background: #202020;
+    overflow: hidden;
 }
 
-
 /* =========================
-   PLAYERS
+   PLAYER
 ========================= */
 
 .player {
@@ -86,40 +56,119 @@ body {
     width: 120px;
     height: 120px;
 
-    transform:
-        translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+}
+
+.skin {
+    position: absolute;
+
+    width: 120px;
+    height: 120px;
+
+    left: 0;
+    top: 0;
+
+    image-rendering: pixelated;
+}
+
+.weapon {
+    position: absolute;
+
+    width: 64px;
+    height: 64px;
+
+    left: 85px;
+    top: 28px;
+
+    transform-origin: 0 50%;
+
+    image-rendering: pixelated;
+}
+
+/* =========================
+   BULLETS
+========================= */
+
+.bullet {
+    position: absolute;
+
+    border-radius: 50%;
+
+    background: white;
 
     pointer-events: none;
 }
 
-.player img {
-    width: 100%;
-    height: 100%;
-
-    object-fit: contain;
-}
-
-
 /* =========================
-   STATUS
+   UI
 ========================= */
 
-#status {
+#hud {
     position: fixed;
 
-    top: 20px;
-    left: 50%;
+    left: 15px;
+    top: 15px;
 
-    transform: translateX(-50%);
+    z-index: 20;
 
     color: white;
 
-    font-family: Arial, sans-serif;
     font-size: 18px;
+    font-weight: bold;
 
-    z-index: 1000;
+    text-shadow: 2px 2px #000;
 }
 
+#hp-bar {
+    width: 180px;
+    height: 18px;
+
+    margin-top: 6px;
+
+    border: 2px solid white;
+
+    background: #333;
+}
+
+#hp-fill {
+    width: 100%;
+    height: 100%;
+
+    background: #4cff4c;
+}
+
+/* =========================
+   DEATH
+========================= */
+
+#death-screen {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 50;
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+
+    background: rgba(0, 0, 0, 0.75);
+
+    color: white;
+
+    text-align: center;
+}
+
+#death-screen h1 {
+    font-size: 42px;
+}
+
+#death-screen p {
+    margin-top: 10px;
+    font-size: 20px;
+}
 
 /* =========================
    JOYSTICK
@@ -128,133 +177,101 @@ body {
 #joystick {
     position: fixed;
 
-    left: 30px;
-    bottom: 30px;
+    left: 25px;
+    bottom: 25px;
 
-    width: 120px;
-    height: 120px;
+    width: 150px;
+    height: 150px;
 
-    border: 3px solid white;
+    z-index: 100;
 
     border-radius: 50%;
 
-    z-index: 2000;
-
-    touch-action: none;
+    background: rgba(255, 255, 255, 0.12);
+    border: 3px solid rgba(255, 255, 255, 0.25);
 }
 
 #stick {
     position: absolute;
 
+    width: 65px;
+    height: 65px;
+
     left: 50%;
     top: 50%;
 
-    width: 50px;
-    height: 50px;
-
-    transform:
-        translate(-50%, -50%);
-
-    background: white;
+    transform: translate(-50%, -50%);
 
     border-radius: 50%;
+
+    background: rgba(255, 255, 255, 0.35);
 }
 
-</style>
-</head>
+/* =========================
+   SHOOT BUTTON
+========================= */
 
+#shoot {
+    position: fixed;
+
+    right: 30px;
+    bottom: 35px;
+
+    width: 110px;
+    height: 110px;
+
+    z-index: 100;
+
+    border-radius: 50%;
+
+    border: 3px solid rgba(255, 255, 255, 0.4);
+
+    background: rgba(255, 80, 80, 0.35);
+
+    color: white;
+
+    font-size: 18px;
+    font-weight: bold;
+}
+</style>
+
+</head>
 
 <body>
 
+<div id="world"></div>
 
-<div id="game">
+<div id="hud">
+    HP: <span id="hp-text">1000 / 1000</span>
 
-    <div id="world">
-
-        <div
-            id="player"
-            class="player"
-        >
-            <img
-                src="assets/skins/starter.png"
-            >
-        </div>
-
-
-        <div
-            id="opponent"
-            class="player"
-        >
-            <img
-                src="assets/skins/starter.png"
-            >
-        </div>
-
-    </div>
+```
+<div id="hp-bar">
+    <div id="hp-fill"></div>
+</div>
+```
 
 </div>
 
-
-<div id="status">
-    Connecting...
+<div id="death-screen">
+    <h1>YOU DIED</h1>
+    <p>Respawning...</p>
 </div>
-
 
 <div id="joystick">
-
     <div id="stick"></div>
-
 </div>
 
+<button id="shoot">SHOOT</button>
 
 <script>
 
-/* =========================
-   TELEGRAM
-========================= */
+const world = document.getElementById("world");
 
-const tg =
-    window.Telegram.WebApp;
+const hpText = document.getElementById("hp-text");
+const hpFill = document.getElementById("hp-fill");
 
-tg.ready();
-tg.expand();
-
-if (tg.requestFullscreen) {
-
-    setTimeout(
-        () => tg.requestFullscreen(),
-        500
-    );
-
-}
-
-
-/* =========================
-   SERVER
-========================= */
-
-const SERVER =
-    "wss://brawlbaaaaalls.onrender.com/ws";
-
-const socket =
-    new WebSocket(SERVER);
-
-
-/* =========================
-   ELEMENTS
-========================= */
-
-const world =
-    document.getElementById("world");
-
-const playerElement =
-    document.getElementById("player");
-
-const opponentElement =
-    document.getElementById("opponent");
-
-const statusElement =
-    document.getElementById("status");
+const deathScreen =
+    document.getElementById("death-screen");
 
 const joystick =
     document.getElementById("joystick");
@@ -262,38 +279,21 @@ const joystick =
 const stick =
     document.getElementById("stick");
 
-
-/* =========================
-   STATE
-========================= */
-
-let myId = null;
-let roomFound = false;
-
-let inputX = 0;
-let inputY = 0;
-
-let aimAngle = 0;
+const shootButton =
+    document.getElementById("shoot");
 
 
-/* =========================
-   WEAPON
-========================= */
+/* =========================================
+   PLAYER DATA
+========================================= */
+
+const selectedSkin =
+    localStorage.getItem("selectedSkin")
+    || "assets/skins/starter.png";
 
 const selectedWeapon =
     localStorage.getItem("selectedWeapon")
     || "assets/weapons/pistol.png";
-
-
-/*
-    Convert:
-
-    assets/weapons/pistol.png
-
-    into:
-
-    pistol
-*/
 
 const weaponName =
     selectedWeapon
@@ -301,394 +301,562 @@ const weaponName =
         .pop()
         .replace(".png", "");
 
-
-/* =========================
-   CONNECT
-========================= */
-
-socket.onopen = () => {
-
-    statusElement.textContent =
-        "Finding opponent...";
+const skinName =
+    selectedSkin
+        .split("/")
+        .pop()
+        .replace(".png", "");
 
 
-    socket.send(
-        JSON.stringify({
+/* =========================================
+   WEBSOCKET
+========================================= */
 
-            type: "player_info",
-
-            name: "Player",
-
-            weapon: weaponName
-
-        })
+const socket =
+    new WebSocket(
+        "wss://brawlbaaaaalls.onrender.com/ws"
     );
 
 
-    socket.send(
-        JSON.stringify({
+/* =========================================
+   PLAYERS
+========================================= */
 
-            type: "play"
+const players = {};
 
-        })
-    );
+let myId = null;
 
-};
 
+/* =========================================
+   CAMERA / AIM
+========================================= */
 
-/* =========================
-   SERVER MESSAGES
-========================= */
+let aimX = 0;
+let aimY = 0;
 
-socket.onmessage = event => {
 
-    let data;
-
-    try {
-
-        data =
-            JSON.parse(
-                event.data
-            );
-
-    }
-    catch {
-
-        return;
-
-    }
-
-
-    /* =====================
-       CONNECTED
-    ===================== */
-
-    if (
-        data.type ===
-        "connected"
-    ) {
-
-        myId =
-            data.player_id;
-
-    }
-
-
-    /* =====================
-       WAITING
-    ===================== */
-
-    else if (
-        data.type ===
-        "waiting"
-    ) {
-
-        statusElement.textContent =
-            "Waiting for opponent...";
-
-    }
-
-
-    /* =====================
-       MATCH FOUND
-    ===================== */
-
-    else if (
-        data.type ===
-        "match_found"
-    ) {
-
-        roomFound = true;
-
-        statusElement.textContent =
-            "MATCH FOUND!";
-
-
-        setTimeout(
-            () => {
-
-                statusElement.textContent =
-                    "Move with the joystick";
-
-            },
-            1000
-        );
-
-    }
-
-
-    /* =====================
-       GAME STATE
-    ===================== */
-
-    else if (
-        data.type ===
-        "state"
-    ) {
-
-        for (
-            const player of
-            data.players
-        ) {
-
-            const element =
-                player.id === myId
-                    ? playerElement
-                    : opponentElement;
-
-
-            /*
-                Server position is
-                converted directly to
-                screen position.
-
-                #world is scaled 0.5×,
-                so everything inside it
-                becomes half-size.
-            */
-
-            element.style.left =
-                `${player.x}px`;
-
-            element.style.top =
-                `${player.y}px`;
-
-
-            if (
-                player.id === myId
-            ) {
-
-                element.style.transform =
-                    `translate(-50%, -50%) rotate(${player.angle}deg)`;
-
-            }
-
-        }
-
-    }
-
-
-    /* =====================
-       OPPONENT LEFT
-    ===================== */
-
-    else if (
-        data.type ===
-        "opponent_left"
-    ) {
-
-        roomFound = false;
-
-        statusElement.textContent =
-            "Opponent left.";
-
-    }
-
-};
-
-
-/* =========================
-   ERRORS
-========================= */
-
-socket.onerror = () => {
-
-    statusElement.textContent =
-        "Server connection failed.";
-
-};
-
-
-socket.onclose = () => {
-
-    statusElement.textContent =
-        "Disconnected.";
-
-};
-
-
-/* =========================
-   SEND INPUT
-========================= */
-
-setInterval(
-    () => {
-
-        if (
-            socket.readyState !==
-            WebSocket.OPEN
-        ) {
-
-            return;
-
-        }
-
-        if (!roomFound) {
-
-            return;
-
-        }
-
-
-        socket.send(
-            JSON.stringify({
-
-                type: "input",
-
-                x: inputX,
-                y: inputY,
-
-                angle: aimAngle,
-
-                shooting: false
-
-            })
-        );
-
-    },
-    1000 / 60
-);
-
-
-/* =========================
+/* =========================================
    JOYSTICK
-========================= */
+========================================= */
+
+let joyX = 0;
+let joyY = 0;
 
 let joystickActive = false;
 
-const MAX_DISTANCE = 35;
-
-
-function moveJoystick(touch) {
+function updateJoystick(clientX, clientY) {
 
     const rect =
         joystick.getBoundingClientRect();
 
-
     const centerX =
-        rect.left +
-        rect.width / 2;
-
+        rect.left + rect.width / 2;
 
     const centerY =
-        rect.top +
-        rect.height / 2;
+        rect.top + rect.height / 2;
 
+    let dx = clientX - centerX;
+    let dy = clientY - centerY;
 
-    let dx =
-        touch.clientX -
-        centerX;
-
-
-    let dy =
-        touch.clientY -
-        centerY;
-
+    const max =
+        rect.width / 2 - 32;
 
     const distance =
-        Math.sqrt(
-            dx * dx +
-            dy * dy
-        );
+        Math.hypot(dx, dy);
 
-
-    if (
-        distance >
-        MAX_DISTANCE
-    ) {
+    if (distance > max) {
 
         dx =
-            dx / distance *
-            MAX_DISTANCE;
+            dx / distance * max;
 
         dy =
-            dy / distance *
-            MAX_DISTANCE;
-
+            dy / distance * max;
     }
 
+    joyX = dx / max;
+    joyY = dy / max;
 
-    stick.style.left =
-        `calc(50% + ${dx}px)`;
-
-
-    stick.style.top =
-        `calc(50% + ${dy}px)`;
-
-
-    inputX =
-        dx / MAX_DISTANCE;
-
-    inputY =
-        dy / MAX_DISTANCE;
-
+    stick.style.transform =
+        `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
 }
-
-
-joystick.addEventListener(
-    "touchstart",
-    event => {
-
-        joystickActive = true;
-
-        moveJoystick(
-            event.touches[0]
-        );
-
-    },
-    {
-        passive: true
-    }
-);
-
-
-joystick.addEventListener(
-    "touchmove",
-    event => {
-
-        if (!joystickActive) {
-            return;
-        }
-
-        moveJoystick(
-            event.touches[0]
-        );
-
-    },
-    {
-        passive: true
-    }
-);
-
 
 function resetJoystick() {
 
+    joyX = 0;
+    joyY = 0;
+
+    stick.style.transform =
+        "translate(-50%, -50%)";
+}
+
+joystick.addEventListener("touchstart", e => {
+
+    joystickActive = true;
+
+    const t = e.touches[0];
+
+    updateJoystick(
+        t.clientX,
+        t.clientY
+    );
+
+});
+
+joystick.addEventListener("touchmove", e => {
+
+    if (!joystickActive) return;
+
+    const t = e.touches[0];
+
+    updateJoystick(
+        t.clientX,
+        t.clientY
+    );
+
+});
+
+joystick.addEventListener("touchend", () => {
+
     joystickActive = false;
 
-    inputX = 0;
-    inputY = 0;
+    resetJoystick();
 
-    stick.style.left =
-        "50%";
+});
 
-    stick.style.top =
-        "50%";
+
+/* =========================================
+   AIM
+========================================= */
+
+document.addEventListener("touchmove", e => {
+
+    if (!e.touches.length) return;
+
+    const t = e.touches[0];
+
+    aimX = t.clientX;
+    aimY = t.clientY;
+
+}, { passive: true });
+
+
+/* =========================================
+   SHOOTING
+========================================= */
+
+let shooting = false;
+
+shootButton.addEventListener("touchstart", e => {
+
+    e.preventDefault();
+
+    shooting = true;
+
+});
+
+shootButton.addEventListener("touchend", e => {
+
+    e.preventDefault();
+
+    shooting = false;
+
+});
+
+
+/* =========================================
+   SEND INPUT
+========================================= */
+
+setInterval(() => {
+
+    if (socket.readyState !== WebSocket.OPEN) {
+        return;
+    }
+
+    socket.send(JSON.stringify({
+
+        type: "input",
+
+        x: joyX,
+        y: joyY,
+
+        aim_x: aimX,
+        aim_y: aimY,
+
+        shooting: shooting
+
+    }));
+
+}, 1000 / 60);
+
+
+/* =========================================
+   CONNECTION
+========================================= */
+
+socket.addEventListener("open", () => {
+
+    socket.send(JSON.stringify({
+
+        type: "player_info",
+
+        name: "Player",
+
+        weapon: weaponName,
+
+        skin: skinName
+
+    }));
+
+    socket.send(JSON.stringify({
+        type: "play"
+    }));
+
+});
+
+
+/* =========================================
+   SERVER MESSAGE
+========================================= */
+
+socket.addEventListener("message", event => {
+
+    const data =
+        JSON.parse(event.data);
+
+
+    /* -------------------------
+       YOUR ID
+    ------------------------- */
+
+    if (data.type === "welcome") {
+
+        myId = data.id;
+
+    }
+
+
+    /* -------------------------
+       STATE
+    ------------------------- */
+
+    if (data.type === "state") {
+
+        updateState(data);
+
+    }
+
+
+    /* -------------------------
+       BULLET
+    ------------------------- */
+
+    if (data.type === "bullet") {
+
+        createBullet(data);
+
+    }
+
+
+    /* -------------------------
+       DEATH
+    ------------------------- */
+
+    if (data.type === "death") {
+
+        if (data.id === myId) {
+
+            deathScreen.style.display =
+                "flex";
+        }
+
+    }
+
+
+    /* -------------------------
+       RESPAWN
+    ------------------------- */
+
+    if (data.type === "respawn") {
+
+        if (data.id === myId) {
+
+            deathScreen.style.display =
+                "none";
+        }
+
+    }
+
+});
+
+
+/* =========================================
+   STATE
+========================================= */
+
+function updateState(data) {
+
+    for (const id in players) {
+
+        players[id].seen = false;
+    }
+
+
+    for (const player of data.players) {
+
+        let element =
+            players[player.id];
+
+
+        if (!element) {
+
+            element =
+                createPlayer(player);
+
+            players[player.id] =
+                element;
+        }
+
+
+        element.seen = true;
+
+
+        element.x =
+            player.x;
+
+        element.y =
+            player.y;
+
+        element.angle =
+            player.angle;
+
+        element.hp =
+            player.hp;
+
+        element.maxHp =
+            player.max_hp;
+
+        element.alive =
+            player.alive;
+
+
+        renderPlayer(element);
+
+
+        if (player.id === myId) {
+
+            updateHP(
+                player.hp,
+                player.max_hp
+            );
+
+        }
+
+    }
+
+
+    for (const id in players) {
+
+        if (!players[id].seen) {
+
+            players[id].element.remove();
+
+            delete players[id];
+
+        }
+
+    }
 
 }
 
 
-joystick.addEventListener(
-    "touchend",
-    resetJoystick
-);
+/* =========================================
+   CREATE PLAYER
+========================================= */
 
-joystick.addEventListener(
-    "touchcancel",
-    resetJoystick
-);
+function createPlayer(player) {
+
+    const element =
+        document.createElement("div");
+
+    element.className =
+        "player";
+
+
+    const skin =
+        document.createElement("img");
+
+    skin.className =
+        "skin";
+
+    skin.src =
+        `assets/skins/${player.skin}.png`;
+
+
+    const weapon =
+        document.createElement("img");
+
+    weapon.className =
+        "weapon";
+
+    weapon.src =
+        `assets/weapons/${player.weapon}.png`;
+
+
+    element.appendChild(skin);
+    element.appendChild(weapon);
+
+    world.appendChild(element);
+
+
+    return {
+
+        element,
+        skin,
+        weapon,
+
+        x: player.x,
+        y: player.y,
+
+        angle: 0,
+
+        hp: player.hp,
+        maxHp: player.max_hp,
+
+        alive: true,
+
+        seen: true
+
+    };
+
+}
+
+
+/* =========================================
+   RENDER PLAYER
+========================================= */
+
+function renderPlayer(player) {
+
+    player.element.style.left =
+        `${player.x}px`;
+
+    player.element.style.top =
+        `${player.y}px`;
+
+    player.element.style.transform =
+        `translate(-50%, -50%) rotate(${player.angle}rad)`;
+
+    player.element.style.display =
+        player.alive
+            ? "block"
+            : "none";
+
+}
+
+
+/* =========================================
+   HP
+========================================= */
+
+function updateHP(hp, maxHp) {
+
+    hp =
+        Math.max(0, hp);
+
+    hpText.textContent =
+        `${Math.ceil(hp)} / ${maxHp}`;
+
+    hpFill.style.width =
+        `${Math.max(0, Math.min(100, hp / maxHp * 100))}%`;
+
+}
+
+
+/* =========================================
+   BULLET VISUAL
+========================================= */
+
+function createBullet(data) {
+
+    const bullet =
+        document.createElement("div");
+
+    bullet.className =
+        "bullet";
+
+
+    const size =
+        Math.max(
+            4,
+            data.size * 120
+        );
+
+
+    bullet.style.width =
+        `${size}px`;
+
+    bullet.style.height =
+        `${size}px`;
+
+
+    bullet.style.left =
+        `${data.x}px`;
+
+    bullet.style.top =
+        `${data.y}px`;
+
+
+    world.appendChild(bullet);
+
+
+    const distance =
+        data.range * 120;
+
+
+    const speed =
+        data.speed;
+
+
+    const start =
+        performance.now();
+
+
+    function animate(now) {
+
+        const elapsed =
+            (now - start) / 1000;
+
+
+        const travelled =
+            speed * elapsed;
+
+
+        if (travelled >= distance) {
+
+            bullet.remove();
+
+            return;
+        }
+
+
+        bullet.style.left =
+            `${data.x + Math.cos(data.angle) * travelled}px`;
+
+        bullet.style.top =
+            `${data.y + Math.sin(data.angle) * travelled}px`;
+
+
+        requestAnimationFrame(animate);
+
+    }
+
+
+    requestAnimationFrame(animate);
+
+}
 
 </script>
 
 </body>
-
 </html>
