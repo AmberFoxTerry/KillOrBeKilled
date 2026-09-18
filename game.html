@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
@@ -7,9 +6,8 @@
 <meta charset="UTF-8">
 
 <meta
-name="viewport"
-content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
 >
 
 <title>game</title>
@@ -34,18 +32,22 @@ body {
 
 body {
     position: relative;
+
+    background:
+        url("assets/ui/background.png")
+        center / cover no-repeat;
 }
 
 
-/* =========================
+/* =========================================================
    PLAYERS
-========================= */
+========================================================= */
 
 .player {
     position: absolute;
 
-    width: 120px;
-    height: 120px;
+    width: 40px;
+    height: 40px;
 
     transform: translate(-50%, -50%);
 
@@ -60,11 +62,26 @@ body {
 }
 
 
-/* =========================
+/* =========================================================
+   PC SCALE
+========================================================= */
+
+@media (min-width: 701px) {
+
+    .player {
+        width: 120px;
+        height: 120px;
+    }
+
+}
+
+
+/* =========================================================
    STATUS
-========================= */
+========================================================= */
 
 #status {
+
     position: fixed;
 
     top: 20px;
@@ -74,18 +91,20 @@ body {
 
     color: white;
 
-    font-family: sans-serif;
+    font-family: Arial, sans-serif;
+
     font-size: 18px;
 
-    z-index: 10;
+    z-index: 100;
 }
 
 
-/* =========================
+/* =========================================================
    JOYSTICK
-========================= */
+========================================================= */
 
 #joystick {
+
     position: fixed;
 
     left: 30px;
@@ -95,12 +114,14 @@ body {
     height: 120px;
 
     border: 3px solid white;
+
     border-radius: 50%;
 
-    z-index: 20;
+    z-index: 100;
 }
 
 #stick {
+
     position: absolute;
 
     left: 50%;
@@ -109,54 +130,95 @@ body {
     width: 50px;
     height: 50px;
 
-    transform: translate(-50%, -50%);
+    transform:
+        translate(-50%, -50%);
 
     background: white;
 
     border-radius: 50%;
 }
 
+
+/* =========================================================
+   HIDE JOYSTICK ON PC
+========================================================= */
+
+@media (min-width: 701px) {
+
+    #joystick {
+        display: none;
+    }
+
+}
+
 </style>
 
 </head>
 
+
 <body>
+
+
+<!-- =======================================================
+     STATUS
+======================================================= -->
 
 <div id="status">
     Connecting...
 </div>
+
+
+<!-- =======================================================
+     PLAYER
+======================================================= -->
 
 <div
     id="player"
     class="player"
 >
 
-```
-<img src="assets/skins/starter.png">
-```
+    <img
+        id="playerSkin"
+        src="assets/skins/starter.png"
+    >
 
 </div>
+
+
+<!-- =======================================================
+     OPPONENT
+======================================================= -->
 
 <div
     id="opponent"
     class="player"
 >
 
-```
-<img src="assets/skins/starter.png">
-```
+    <img
+        id="opponentSkin"
+        src="assets/skins/starter.png"
+    >
 
 </div>
+
+
+<!-- =======================================================
+     MOBILE JOYSTICK
+======================================================= -->
 
 <div id="joystick">
 
-```
-<div id="stick"></div>
-```
+    <div id="stick"></div>
 
 </div>
 
+
 <script>
+
+
+/* =========================================================
+   TELEGRAM
+========================================================= */
 
 const tg =
     window.Telegram.WebApp;
@@ -164,17 +226,30 @@ const tg =
 tg.ready();
 tg.expand();
 
+
 if (tg.requestFullscreen) {
+
     setTimeout(
         () => tg.requestFullscreen(),
         500
     );
+
 }
 
 
-/* =========================
+/* =========================================================
+   DEVICE
+========================================================= */
+
+const isMobile =
+    window.matchMedia(
+        "(max-width: 700px)"
+    ).matches;
+
+
+/* =========================================================
    SERVER
-========================= */
+========================================================= */
 
 const SERVER =
     "wss://brawlbaaaaalls.onrender.com/ws";
@@ -184,58 +259,80 @@ const socket =
     new WebSocket(SERVER);
 
 
-/* =========================
-   PLAYER
-========================= */
+/* =========================================================
+   ELEMENTS
+========================================================= */
 
 const playerElement =
-    document.getElementById("player");
+    document.getElementById(
+        "player"
+    );
 
 const opponentElement =
-    document.getElementById("opponent");
+    document.getElementById(
+        "opponent"
+    );
 
 const statusElement =
-    document.getElementById("status");
+    document.getElementById(
+        "status"
+    );
 
+
+/* =========================================================
+   PLAYER ID
+========================================================= */
 
 let myId = null;
 
 let roomFound = false;
 
 
-/* =========================
+/* =========================================================
    MOVEMENT
-========================= */
+========================================================= */
 
 let inputX = 0;
 let inputY = 0;
 
 
-/* PC */
+/* =========================================================
+   PC KEYBOARD
+========================================================= */
 
 const keys = {};
 
-document.addEventListener(
-    "keydown",
-    event => {
 
-        keys[event.key.toLowerCase()] = true;
+if (!isMobile) {
 
-        updateKeyboard();
+    document.addEventListener(
+        "keydown",
+        event => {
 
-    }
-);
+            keys[
+                event.key.toLowerCase()
+            ] = true;
 
-document.addEventListener(
-    "keyup",
-    event => {
+            updateKeyboard();
 
-        keys[event.key.toLowerCase()] = false;
+        }
+    );
 
-        updateKeyboard();
 
-    }
-);
+    document.addEventListener(
+        "keyup",
+        event => {
+
+            keys[
+                event.key.toLowerCase()
+            ] = false;
+
+            updateKeyboard();
+
+        }
+    );
+
+}
 
 
 function updateKeyboard() {
@@ -243,42 +340,108 @@ function updateKeyboard() {
     let x = 0;
     let y = 0;
 
+
     if (
         keys["a"] ||
         keys["arrowleft"]
     ) {
+
         x -= 1;
+
     }
+
 
     if (
         keys["d"] ||
         keys["arrowright"]
     ) {
+
         x += 1;
+
     }
+
 
     if (
         keys["w"] ||
         keys["arrowup"]
     ) {
+
         y -= 1;
+
     }
+
 
     if (
         keys["s"] ||
         keys["arrowdown"]
     ) {
+
         y += 1;
+
     }
+
 
     inputX = x;
     inputY = y;
+
 }
 
 
-/* =========================
+/* =========================================================
+   MOUSE AIMING
+========================================================= */
+
+let aimAngle = 0;
+
+
+if (!isMobile) {
+
+    document.addEventListener(
+        "mousemove",
+        event => {
+
+            const rect =
+                playerElement
+                    .getBoundingClientRect();
+
+
+            const centerX =
+                rect.left +
+                rect.width / 2;
+
+
+            const centerY =
+                rect.top +
+                rect.height / 2;
+
+
+            const dx =
+                event.clientX -
+                centerX;
+
+
+            const dy =
+                event.clientY -
+                centerY;
+
+
+            aimAngle =
+                Math.atan2(
+                    dy,
+                    dx
+                ) *
+                180 /
+                Math.PI;
+
+        }
+    );
+
+}
+
+
+/* =========================================================
    SEND INPUT
-========================= */
+========================================================= */
 
 setInterval(
     () => {
@@ -287,12 +450,18 @@ setInterval(
             socket.readyState !==
             WebSocket.OPEN
         ) {
+
             return;
+
         }
 
+
         if (!roomFound) {
+
             return;
+
         }
+
 
         socket.send(
             JSON.stringify({
@@ -302,7 +471,7 @@ setInterval(
                 x: inputX,
                 y: inputY,
 
-                angle: 0,
+                angle: aimAngle,
 
                 shooting: false
 
@@ -314,21 +483,14 @@ setInterval(
 );
 
 
-/* =========================
-   SERVER MESSAGES
-========================= */
+/* =========================================================
+   SERVER CONNECTED
+========================================================= */
 
 socket.onopen = () => {
 
     statusElement.textContent =
         "Finding opponent...";
-
-
-    const weapon =
-        localStorage.getItem(
-            "selectedWeapon"
-        )
-        || "assets/weapons/pistol.png";
 
 
     socket.send(
@@ -351,26 +513,37 @@ socket.onopen = () => {
 
         })
     );
+
 };
 
+
+/* =========================================================
+   SERVER MESSAGES
+========================================================= */
 
 socket.onmessage = event => {
 
     let data;
 
+
     try {
 
         data =
-            JSON.parse(event.data);
+            JSON.parse(
+                event.data
+            );
 
-    } catch {
+    }
+    catch {
 
         return;
 
     }
 
 
-    /* CONNECTED */
+    /* -----------------------------------------------------
+       CONNECTED
+    ----------------------------------------------------- */
 
     if (
         data.type ===
@@ -383,7 +556,9 @@ socket.onmessage = event => {
     }
 
 
-    /* WAITING */
+    /* -----------------------------------------------------
+       WAITING
+    ----------------------------------------------------- */
 
     else if (
         data.type ===
@@ -396,7 +571,9 @@ socket.onmessage = event => {
     }
 
 
-    /* MATCH */
+    /* -----------------------------------------------------
+       MATCH FOUND
+    ----------------------------------------------------- */
 
     else if (
         data.type ===
@@ -409,11 +586,16 @@ socket.onmessage = event => {
             "MATCH FOUND!";
 
 
+        /* Load opponent weapon/skin later.
+           For now everyone uses starter. */
+
         setTimeout(
             () => {
 
                 statusElement.textContent =
-                    "WASD / Arrow keys";
+                    isMobile
+                        ? "Touch joystick to move"
+                        : "WASD / Arrow keys to move";
 
             },
             1000
@@ -422,12 +604,15 @@ socket.onmessage = event => {
     }
 
 
-    /* STATE */
+    /* -----------------------------------------------------
+       STATE
+    ----------------------------------------------------- */
 
     else if (
         data.type ===
         "state"
     ) {
+
 
         for (
             const player of
@@ -440,18 +625,50 @@ socket.onmessage = event => {
                     : opponentElement;
 
 
+            /*
+                Server coordinates are world coordinates.
+
+                Center of screen =
+                world 0,0
+            */
+
             element.style.left =
-                `${window.innerWidth / 2 + player.x}px`;
+                `${
+                    window.innerWidth / 2
+                    + player.x
+                }px`;
+
 
             element.style.top =
-                `${window.innerHeight / 2 + player.y}px`;
+                `${
+                    window.innerHeight / 2
+                    + player.y
+                }px`;
+
+
+            /*
+                Rotate our player
+                toward mouse.
+            */
+
+            if (
+                player.id === myId &&
+                !isMobile
+            ) {
+
+                element.style.transform =
+                    `translate(-50%, -50%) rotate(${player.angle}deg)`;
+
+            }
 
         }
 
     }
 
 
-    /* OPPONENT LEFT */
+    /* -----------------------------------------------------
+       OPPONENT LEFT
+    ----------------------------------------------------- */
 
     else if (
         data.type ===
@@ -467,6 +684,10 @@ socket.onmessage = event => {
 
 };
 
+
+/* =========================================================
+   CONNECTION ERRORS
+========================================================= */
 
 socket.onerror = () => {
 
@@ -484,45 +705,53 @@ socket.onclose = () => {
 };
 
 
-/* =========================
+/* =========================================================
    MOBILE JOYSTICK
-========================= */
+========================================================= */
 
 const joystick =
-    document.getElementById("joystick");
+    document.getElementById(
+        "joystick"
+    );
 
 const stick =
-    document.getElementById("stick");
+    document.getElementById(
+        "stick"
+    );
 
-let joystickActive = false;
+
+let joystickActive =
+    false;
 
 
-function joystickMove(
-    touch
-) {
+function joystickMove(touch) {
 
     const rect =
         joystick.getBoundingClientRect();
+
 
     const centerX =
         rect.left +
         rect.width / 2;
 
+
     const centerY =
         rect.top +
         rect.height / 2;
 
+
     let dx =
         touch.clientX -
         centerX;
+
 
     let dy =
         touch.clientY -
         centerY;
 
 
-    const max =
-        35;
+    const max = 35;
+
 
     const distance =
         Math.sqrt(
@@ -531,11 +760,14 @@ function joystickMove(
         );
 
 
-    if (distance > max) {
+    if (
+        distance > max
+    ) {
 
         dx =
             dx / distance *
             max;
+
 
         dy =
             dy / distance *
@@ -547,6 +779,7 @@ function joystickMove(
     stick.style.left =
         `calc(50% + ${dx}px)`;
 
+
     stick.style.top =
         `calc(50% + ${dy}px)`;
 
@@ -554,66 +787,84 @@ function joystickMove(
     inputX =
         dx / max;
 
+
     inputY =
         dy / max;
 
 }
 
 
-joystick.addEventListener(
-    "touchstart",
-    event => {
+if (isMobile) {
 
-        joystickActive = true;
+    joystick.addEventListener(
+        "touchstart",
+        event => {
 
-        joystickMove(
-            event.touches[0]
-        );
+            joystickActive = true;
 
-    },
-    { passive: true }
-);
+            joystickMove(
+                event.touches[0]
+            );
 
-
-joystick.addEventListener(
-    "touchmove",
-    event => {
-
-        if (!joystickActive) {
-            return;
+        },
+        {
+            passive: true
         }
-
-        joystickMove(
-            event.touches[0]
-        );
-
-    },
-    { passive: true }
-);
+    );
 
 
-function resetJoystick() {
+    joystick.addEventListener(
+        "touchmove",
+        event => {
 
-    joystickActive = false;
+            if (
+                !joystickActive
+            ) {
 
-    inputX = 0;
-    inputY = 0;
+                return;
 
-    stick.style.left = "50%";
-    stick.style.top = "50%";
+            }
+
+
+            joystickMove(
+                event.touches[0]
+            );
+
+        },
+        {
+            passive: true
+        }
+    );
+
+
+    function resetJoystick() {
+
+        joystickActive = false;
+
+        inputX = 0;
+        inputY = 0;
+
+        stick.style.left =
+            "50%";
+
+        stick.style.top =
+            "50%";
+
+    }
+
+
+    joystick.addEventListener(
+        "touchend",
+        resetJoystick
+    );
+
+
+    joystick.addEventListener(
+        "touchcancel",
+        resetJoystick
+    );
 
 }
-
-
-joystick.addEventListener(
-    "touchend",
-    resetJoystick
-);
-
-joystick.addEventListener(
-    "touchcancel",
-    resetJoystick
-);
 
 </script>
 
