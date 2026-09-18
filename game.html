@@ -2,7 +2,6 @@
 <html lang="en">
 
 <head>
-
 <meta charset="UTF-8">
 
 <meta
@@ -27,11 +26,28 @@ body {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: black;
 }
 
 body {
-    position: relative;
+    background: black;
+    touch-action: none;
+}
+
+
+/* =========================
+   GAME AREA
+========================= */
+
+#game {
+    position: fixed;
+
+    left: 0;
+    top: 0;
+
+    width: 100vw;
+    height: 100vh;
+
+    overflow: hidden;
 
     background:
         url("assets/ui/background.png")
@@ -39,17 +55,39 @@ body {
 }
 
 
-/* =========================================================
+/* =========================
+   GAME SCALE
+========================= */
+
+#world {
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    width: 0;
+    height: 0;
+
+    transform:
+        translate(-50%, -50%)
+        scale(0.5);
+
+    transform-origin: center;
+}
+
+
+/* =========================
    PLAYERS
-========================================================= */
+========================= */
 
 .player {
     position: absolute;
 
-    width: 40px;
-    height: 40px;
+    width: 120px;
+    height: 120px;
 
-    transform: translate(-50%, -50%);
+    transform:
+        translate(-50%, -50%);
 
     pointer-events: none;
 }
@@ -62,26 +100,11 @@ body {
 }
 
 
-/* =========================================================
-   PC SCALE
-========================================================= */
-
-@media (min-width: 701px) {
-
-    .player {
-        width: 120px;
-        height: 120px;
-    }
-
-}
-
-
-/* =========================================================
+/* =========================
    STATUS
-========================================================= */
+========================= */
 
 #status {
-
     position: fixed;
 
     top: 20px;
@@ -92,19 +115,17 @@ body {
     color: white;
 
     font-family: Arial, sans-serif;
-
     font-size: 18px;
 
-    z-index: 100;
+    z-index: 1000;
 }
 
 
-/* =========================================================
+/* =========================
    JOYSTICK
-========================================================= */
+========================= */
 
 #joystick {
-
     position: fixed;
 
     left: 30px;
@@ -117,11 +138,12 @@ body {
 
     border-radius: 50%;
 
-    z-index: 100;
+    z-index: 2000;
+
+    touch-action: none;
 }
 
 #stick {
-
     position: absolute;
 
     left: 50%;
@@ -138,73 +160,45 @@ body {
     border-radius: 50%;
 }
 
-
-/* =========================================================
-   HIDE JOYSTICK ON PC
-========================================================= */
-
-@media (min-width: 701px) {
-
-    #joystick {
-        display: none;
-    }
-
-}
-
 </style>
-
 </head>
 
 
 <body>
 
 
-<!-- =======================================================
-     STATUS
-======================================================= -->
+<div id="game">
+
+    <div id="world">
+
+        <div
+            id="player"
+            class="player"
+        >
+            <img
+                src="assets/skins/starter.png"
+            >
+        </div>
+
+
+        <div
+            id="opponent"
+            class="player"
+        >
+            <img
+                src="assets/skins/starter.png"
+            >
+        </div>
+
+    </div>
+
+</div>
+
 
 <div id="status">
     Connecting...
 </div>
 
-
-<!-- =======================================================
-     PLAYER
-======================================================= -->
-
-<div
-    id="player"
-    class="player"
->
-
-    <img
-        id="playerSkin"
-        src="assets/skins/starter.png"
-    >
-
-</div>
-
-
-<!-- =======================================================
-     OPPONENT
-======================================================= -->
-
-<div
-    id="opponent"
-    class="player"
->
-
-    <img
-        id="opponentSkin"
-        src="assets/skins/starter.png"
-    >
-
-</div>
-
-
-<!-- =======================================================
-     MOBILE JOYSTICK
-======================================================= -->
 
 <div id="joystick">
 
@@ -215,17 +209,15 @@ body {
 
 <script>
 
-
-/* =========================================================
+/* =========================
    TELEGRAM
-========================================================= */
+========================= */
 
 const tg =
     window.Telegram.WebApp;
 
 tg.ready();
 tg.expand();
-
 
 if (tg.requestFullscreen) {
 
@@ -237,211 +229,287 @@ if (tg.requestFullscreen) {
 }
 
 
-/* =========================================================
-   DEVICE
-========================================================= */
-
-const isMobile =
-    window.matchMedia(
-        "(max-width: 700px)"
-    ).matches;
-
-
-/* =========================================================
+/* =========================
    SERVER
-========================================================= */
+========================= */
 
 const SERVER =
     "wss://brawlbaaaaalls.onrender.com/ws";
-
 
 const socket =
     new WebSocket(SERVER);
 
 
-/* =========================================================
+/* =========================
    ELEMENTS
-========================================================= */
+========================= */
+
+const world =
+    document.getElementById("world");
 
 const playerElement =
-    document.getElementById(
-        "player"
-    );
+    document.getElementById("player");
 
 const opponentElement =
-    document.getElementById(
-        "opponent"
-    );
+    document.getElementById("opponent");
 
 const statusElement =
-    document.getElementById(
-        "status"
-    );
+    document.getElementById("status");
+
+const joystick =
+    document.getElementById("joystick");
+
+const stick =
+    document.getElementById("stick");
 
 
-/* =========================================================
-   PLAYER ID
-========================================================= */
+/* =========================
+   STATE
+========================= */
 
 let myId = null;
-
 let roomFound = false;
-
-
-/* =========================================================
-   MOVEMENT
-========================================================= */
 
 let inputX = 0;
 let inputY = 0;
 
-
-/* =========================================================
-   PC KEYBOARD
-========================================================= */
-
-const keys = {};
-
-
-if (!isMobile) {
-
-    document.addEventListener(
-        "keydown",
-        event => {
-
-            keys[
-                event.key.toLowerCase()
-            ] = true;
-
-            updateKeyboard();
-
-        }
-    );
-
-
-    document.addEventListener(
-        "keyup",
-        event => {
-
-            keys[
-                event.key.toLowerCase()
-            ] = false;
-
-            updateKeyboard();
-
-        }
-    );
-
-}
-
-
-function updateKeyboard() {
-
-    let x = 0;
-    let y = 0;
-
-
-    if (
-        keys["a"] ||
-        keys["arrowleft"]
-    ) {
-
-        x -= 1;
-
-    }
-
-
-    if (
-        keys["d"] ||
-        keys["arrowright"]
-    ) {
-
-        x += 1;
-
-    }
-
-
-    if (
-        keys["w"] ||
-        keys["arrowup"]
-    ) {
-
-        y -= 1;
-
-    }
-
-
-    if (
-        keys["s"] ||
-        keys["arrowdown"]
-    ) {
-
-        y += 1;
-
-    }
-
-
-    inputX = x;
-    inputY = y;
-
-}
-
-
-/* =========================================================
-   MOUSE AIMING
-========================================================= */
-
 let aimAngle = 0;
 
 
-if (!isMobile) {
+/* =========================
+   WEAPON
+========================= */
 
-    document.addEventListener(
-        "mousemove",
-        event => {
-
-            const rect =
-                playerElement
-                    .getBoundingClientRect();
+const selectedWeapon =
+    localStorage.getItem("selectedWeapon")
+    || "assets/weapons/pistol.png";
 
 
-            const centerX =
-                rect.left +
-                rect.width / 2;
+/*
+    Convert:
+
+    assets/weapons/pistol.png
+
+    into:
+
+    pistol
+*/
+
+const weaponName =
+    selectedWeapon
+        .split("/")
+        .pop()
+        .replace(".png", "");
 
 
-            const centerY =
-                rect.top +
-                rect.height / 2;
+/* =========================
+   CONNECT
+========================= */
+
+socket.onopen = () => {
+
+    statusElement.textContent =
+        "Finding opponent...";
 
 
-            const dx =
-                event.clientX -
-                centerX;
+    socket.send(
+        JSON.stringify({
 
+            type: "player_info",
 
-            const dy =
-                event.clientY -
-                centerY;
+            name: "Player",
 
+            weapon: weaponName
 
-            aimAngle =
-                Math.atan2(
-                    dy,
-                    dx
-                ) *
-                180 /
-                Math.PI;
-
-        }
+        })
     );
 
-}
+
+    socket.send(
+        JSON.stringify({
+
+            type: "play"
+
+        })
+    );
+
+};
 
 
-/* =========================================================
+/* =========================
+   SERVER MESSAGES
+========================= */
+
+socket.onmessage = event => {
+
+    let data;
+
+    try {
+
+        data =
+            JSON.parse(
+                event.data
+            );
+
+    }
+    catch {
+
+        return;
+
+    }
+
+
+    /* =====================
+       CONNECTED
+    ===================== */
+
+    if (
+        data.type ===
+        "connected"
+    ) {
+
+        myId =
+            data.player_id;
+
+    }
+
+
+    /* =====================
+       WAITING
+    ===================== */
+
+    else if (
+        data.type ===
+        "waiting"
+    ) {
+
+        statusElement.textContent =
+            "Waiting for opponent...";
+
+    }
+
+
+    /* =====================
+       MATCH FOUND
+    ===================== */
+
+    else if (
+        data.type ===
+        "match_found"
+    ) {
+
+        roomFound = true;
+
+        statusElement.textContent =
+            "MATCH FOUND!";
+
+
+        setTimeout(
+            () => {
+
+                statusElement.textContent =
+                    "Move with the joystick";
+
+            },
+            1000
+        );
+
+    }
+
+
+    /* =====================
+       GAME STATE
+    ===================== */
+
+    else if (
+        data.type ===
+        "state"
+    ) {
+
+        for (
+            const player of
+            data.players
+        ) {
+
+            const element =
+                player.id === myId
+                    ? playerElement
+                    : opponentElement;
+
+
+            /*
+                Server position is
+                converted directly to
+                screen position.
+
+                #world is scaled 0.5×,
+                so everything inside it
+                becomes half-size.
+            */
+
+            element.style.left =
+                `${player.x}px`;
+
+            element.style.top =
+                `${player.y}px`;
+
+
+            if (
+                player.id === myId
+            ) {
+
+                element.style.transform =
+                    `translate(-50%, -50%) rotate(${player.angle}deg)`;
+
+            }
+
+        }
+
+    }
+
+
+    /* =====================
+       OPPONENT LEFT
+    ===================== */
+
+    else if (
+        data.type ===
+        "opponent_left"
+    ) {
+
+        roomFound = false;
+
+        statusElement.textContent =
+            "Opponent left.";
+
+    }
+
+};
+
+
+/* =========================
+   ERRORS
+========================= */
+
+socket.onerror = () => {
+
+    statusElement.textContent =
+        "Server connection failed.";
+
+};
+
+
+socket.onclose = () => {
+
+    statusElement.textContent =
+        "Disconnected.";
+
+};
+
+
+/* =========================
    SEND INPUT
-========================================================= */
+========================= */
 
 setInterval(
     () => {
@@ -454,7 +522,6 @@ setInterval(
             return;
 
         }
-
 
         if (!roomFound) {
 
@@ -483,248 +550,16 @@ setInterval(
 );
 
 
-/* =========================================================
-   SERVER CONNECTED
-========================================================= */
+/* =========================
+   JOYSTICK
+========================= */
 
-socket.onopen = () => {
+let joystickActive = false;
 
-    statusElement.textContent =
-        "Finding opponent...";
+const MAX_DISTANCE = 35;
 
 
-    socket.send(
-        JSON.stringify({
-
-            type: "player_info",
-
-            name: "Player",
-
-            weapon: "pistol"
-
-        })
-    );
-
-
-    socket.send(
-        JSON.stringify({
-
-            type: "play"
-
-        })
-    );
-
-};
-
-
-/* =========================================================
-   SERVER MESSAGES
-========================================================= */
-
-socket.onmessage = event => {
-
-    let data;
-
-
-    try {
-
-        data =
-            JSON.parse(
-                event.data
-            );
-
-    }
-    catch {
-
-        return;
-
-    }
-
-
-    /* -----------------------------------------------------
-       CONNECTED
-    ----------------------------------------------------- */
-
-    if (
-        data.type ===
-        "connected"
-    ) {
-
-        myId =
-            data.player_id;
-
-    }
-
-
-    /* -----------------------------------------------------
-       WAITING
-    ----------------------------------------------------- */
-
-    else if (
-        data.type ===
-        "waiting"
-    ) {
-
-        statusElement.textContent =
-            "Waiting for opponent...";
-
-    }
-
-
-    /* -----------------------------------------------------
-       MATCH FOUND
-    ----------------------------------------------------- */
-
-    else if (
-        data.type ===
-        "match_found"
-    ) {
-
-        roomFound = true;
-
-        statusElement.textContent =
-            "MATCH FOUND!";
-
-
-        /* Load opponent weapon/skin later.
-           For now everyone uses starter. */
-
-        setTimeout(
-            () => {
-
-                statusElement.textContent =
-                    isMobile
-                        ? "Touch joystick to move"
-                        : "WASD / Arrow keys to move";
-
-            },
-            1000
-        );
-
-    }
-
-
-    /* -----------------------------------------------------
-       STATE
-    ----------------------------------------------------- */
-
-    else if (
-        data.type ===
-        "state"
-    ) {
-
-
-        for (
-            const player of
-            data.players
-        ) {
-
-            const element =
-                player.id === myId
-                    ? playerElement
-                    : opponentElement;
-
-
-            /*
-                Server coordinates are world coordinates.
-
-                Center of screen =
-                world 0,0
-            */
-
-            element.style.left =
-                `${
-                    window.innerWidth / 2
-                    + player.x
-                }px`;
-
-
-            element.style.top =
-                `${
-                    window.innerHeight / 2
-                    + player.y
-                }px`;
-
-
-            /*
-                Rotate our player
-                toward mouse.
-            */
-
-            if (
-                player.id === myId &&
-                !isMobile
-            ) {
-
-                element.style.transform =
-                    `translate(-50%, -50%) rotate(${player.angle}deg)`;
-
-            }
-
-        }
-
-    }
-
-
-    /* -----------------------------------------------------
-       OPPONENT LEFT
-    ----------------------------------------------------- */
-
-    else if (
-        data.type ===
-        "opponent_left"
-    ) {
-
-        roomFound = false;
-
-        statusElement.textContent =
-            "Opponent left.";
-
-    }
-
-};
-
-
-/* =========================================================
-   CONNECTION ERRORS
-========================================================= */
-
-socket.onerror = () => {
-
-    statusElement.textContent =
-        "Server connection failed.";
-
-};
-
-
-socket.onclose = () => {
-
-    statusElement.textContent =
-        "Disconnected.";
-
-};
-
-
-/* =========================================================
-   MOBILE JOYSTICK
-========================================================= */
-
-const joystick =
-    document.getElementById(
-        "joystick"
-    );
-
-const stick =
-    document.getElementById(
-        "stick"
-    );
-
-
-let joystickActive =
-    false;
-
-
-function joystickMove(touch) {
+function moveJoystick(touch) {
 
     const rect =
         joystick.getBoundingClientRect();
@@ -750,9 +585,6 @@ function joystickMove(touch) {
         centerY;
 
 
-    const max = 35;
-
-
     const distance =
         Math.sqrt(
             dx * dx +
@@ -761,17 +593,17 @@ function joystickMove(touch) {
 
 
     if (
-        distance > max
+        distance >
+        MAX_DISTANCE
     ) {
 
         dx =
             dx / distance *
-            max;
-
+            MAX_DISTANCE;
 
         dy =
             dy / distance *
-            max;
+            MAX_DISTANCE;
 
     }
 
@@ -785,86 +617,75 @@ function joystickMove(touch) {
 
 
     inputX =
-        dx / max;
-
+        dx / MAX_DISTANCE;
 
     inputY =
-        dy / max;
+        dy / MAX_DISTANCE;
 
 }
 
 
-if (isMobile) {
+joystick.addEventListener(
+    "touchstart",
+    event => {
 
-    joystick.addEventListener(
-        "touchstart",
-        event => {
+        joystickActive = true;
 
-            joystickActive = true;
+        moveJoystick(
+            event.touches[0]
+        );
 
-            joystickMove(
-                event.touches[0]
-            );
-
-        },
-        {
-            passive: true
-        }
-    );
-
-
-    joystick.addEventListener(
-        "touchmove",
-        event => {
-
-            if (
-                !joystickActive
-            ) {
-
-                return;
-
-            }
-
-
-            joystickMove(
-                event.touches[0]
-            );
-
-        },
-        {
-            passive: true
-        }
-    );
-
-
-    function resetJoystick() {
-
-        joystickActive = false;
-
-        inputX = 0;
-        inputY = 0;
-
-        stick.style.left =
-            "50%";
-
-        stick.style.top =
-            "50%";
-
+    },
+    {
+        passive: true
     }
+);
 
 
-    joystick.addEventListener(
-        "touchend",
-        resetJoystick
-    );
+joystick.addEventListener(
+    "touchmove",
+    event => {
+
+        if (!joystickActive) {
+            return;
+        }
+
+        moveJoystick(
+            event.touches[0]
+        );
+
+    },
+    {
+        passive: true
+    }
+);
 
 
-    joystick.addEventListener(
-        "touchcancel",
-        resetJoystick
-    );
+function resetJoystick() {
+
+    joystickActive = false;
+
+    inputX = 0;
+    inputY = 0;
+
+    stick.style.left =
+        "50%";
+
+    stick.style.top =
+        "50%";
 
 }
+
+
+joystick.addEventListener(
+    "touchend",
+    resetJoystick
+);
+
+joystick.addEventListener(
+    "touchcancel",
+    resetJoystick
+);
 
 </script>
 
