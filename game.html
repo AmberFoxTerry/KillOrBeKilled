@@ -14,7 +14,8 @@
     touch-action: none;
 }
 
-html, body {
+html,
+body {
     width: 100%;
     height: 100%;
     overflow: hidden;
@@ -27,7 +28,7 @@ body {
 }
 
 /* =========================
-   GAME
+   GAME WORLD
 ========================= */
 
 #world {
@@ -100,7 +101,7 @@ body {
 }
 
 /* =========================
-   UI
+   HUD
 ========================= */
 
 #hud {
@@ -138,7 +139,7 @@ body {
 }
 
 /* =========================
-   DEATH
+   MATCH OVER
 ========================= */
 
 #death-screen {
@@ -146,7 +147,7 @@ body {
 
     inset: 0;
 
-    z-index: 50;
+    z-index: 200;
 
     display: none;
 
@@ -154,7 +155,7 @@ body {
     justify-content: center;
     flex-direction: column;
 
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(0, 0, 0, 0.8);
 
     color: white;
 
@@ -163,10 +164,11 @@ body {
 
 #death-screen h1 {
     font-size: 42px;
+
+    margin-bottom: 10px;
 }
 
 #death-screen p {
-    margin-top: 10px;
     font-size: 20px;
 }
 
@@ -188,6 +190,7 @@ body {
     border-radius: 50%;
 
     background: rgba(255, 255, 255, 0.12);
+
     border: 3px solid rgba(255, 255, 255, 0.25);
 }
 
@@ -242,9 +245,13 @@ body {
 <div id="world"></div>
 
 <div id="hud">
-    HP: <span id="hp-text">1000 / 1000</span>
 
 ```
+HP:
+<span id="hp-text">
+    1000 / 1000
+</span>
+
 <div id="hp-bar">
     <div id="hp-fill"></div>
 </div>
@@ -253,25 +260,54 @@ body {
 </div>
 
 <div id="death-screen">
-    <h1>YOU DIED</h1>
-    <p>Respawning...</p>
+
+```
+<h1 id="result-title">
+    YOU DIED
+</h1>
+
+<p id="result-text">
+    Returning to lobby...
+</p>
+```
+
 </div>
 
 <div id="joystick">
-    <div id="stick"></div>
+
+```
+<div id="stick"></div>
+```
+
 </div>
 
-<button id="shoot">SHOOT</button>
+<button id="shoot">
+    SHOOT
+</button>
 
 <script>
 
-const world = document.getElementById("world");
+/* ============================================================
+   ELEMENTS
+============================================================ */
 
-const hpText = document.getElementById("hp-text");
-const hpFill = document.getElementById("hp-fill");
+const world =
+    document.getElementById("world");
+
+const hpText =
+    document.getElementById("hp-text");
+
+const hpFill =
+    document.getElementById("hp-fill");
 
 const deathScreen =
     document.getElementById("death-screen");
+
+const resultTitle =
+    document.getElementById("result-title");
+
+const resultText =
+    document.getElementById("result-text");
 
 const joystick =
     document.getElementById("joystick");
@@ -283,9 +319,9 @@ const shootButton =
     document.getElementById("shoot");
 
 
-/* =========================================
-   PLAYER DATA
-========================================= */
+/* ============================================================
+   EQUIPMENT
+============================================================ */
 
 const selectedSkin =
     localStorage.getItem("selectedSkin")
@@ -295,11 +331,13 @@ const selectedWeapon =
     localStorage.getItem("selectedWeapon")
     || "assets/weapons/pistol.png";
 
+
 const weaponName =
     selectedWeapon
         .split("/")
         .pop()
         .replace(".png", "");
+
 
 const skinName =
     selectedSkin
@@ -308,9 +346,9 @@ const skinName =
         .replace(".png", "");
 
 
-/* =========================================
+/* ============================================================
    WEBSOCKET
-========================================= */
+============================================================ */
 
 const socket =
     new WebSocket(
@@ -318,51 +356,61 @@ const socket =
     );
 
 
-/* =========================================
+/* ============================================================
    PLAYERS
-========================================= */
+============================================================ */
 
 const players = {};
 
 let myId = null;
 
 
-/* =========================================
-   CAMERA / AIM
-========================================= */
+/* ============================================================
+   AIM
+============================================================ */
 
 let aimX = 0;
 let aimY = 0;
 
 
-/* =========================================
+/* ============================================================
    JOYSTICK
-========================================= */
+============================================================ */
 
 let joyX = 0;
 let joyY = 0;
 
 let joystickActive = false;
 
-function updateJoystick(clientX, clientY) {
+
+function updateJoystick(
+    clientX,
+    clientY
+) {
 
     const rect =
         joystick.getBoundingClientRect();
 
     const centerX =
-        rect.left + rect.width / 2;
+        rect.left +
+        rect.width / 2;
 
     const centerY =
-        rect.top + rect.height / 2;
+        rect.top +
+        rect.height / 2;
 
-    let dx = clientX - centerX;
-    let dy = clientY - centerY;
+    let dx =
+        clientX - centerX;
+
+    let dy =
+        clientY - centerY;
 
     const max =
         rect.width / 2 - 32;
 
     const distance =
         Math.hypot(dx, dy);
+
 
     if (distance > max) {
 
@@ -371,14 +419,21 @@ function updateJoystick(clientX, clientY) {
 
         dy =
             dy / distance * max;
+
     }
 
-    joyX = dx / max;
-    joyY = dy / max;
+
+    joyX =
+        dx / max;
+
+    joyY =
+        dy / max;
+
 
     stick.style.transform =
         `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
 }
+
 
 function resetJoystick() {
 
@@ -389,220 +444,367 @@ function resetJoystick() {
         "translate(-50%, -50%)";
 }
 
-joystick.addEventListener("touchstart", e => {
 
-    joystickActive = true;
+joystick.addEventListener(
+    "touchstart",
+    event => {
 
-    const t = e.touches[0];
+        event.preventDefault();
 
-    updateJoystick(
-        t.clientX,
-        t.clientY
-    );
+        joystickActive = true;
 
-});
+        const touch =
+            event.touches[0];
 
-joystick.addEventListener("touchmove", e => {
+        updateJoystick(
+            touch.clientX,
+            touch.clientY
+        );
 
-    if (!joystickActive) return;
+    }
+);
 
-    const t = e.touches[0];
 
-    updateJoystick(
-        t.clientX,
-        t.clientY
-    );
+joystick.addEventListener(
+    "touchmove",
+    event => {
 
-});
+        event.preventDefault();
 
-joystick.addEventListener("touchend", () => {
+        if (!joystickActive)
+            return;
+
+        const touch =
+            event.touches[0];
+
+        updateJoystick(
+            touch.clientX,
+            touch.clientY
+        );
+
+    }
+);
+
+
+joystick.addEventListener(
+    "touchend",
+    event => {
+
+        event.preventDefault();
+
+        joystickActive = false;
+
+        resetJoystick();
+
+    }
+);
+
+
+/* ============================================================
+   AIM
+============================================================ */
+
+document.addEventListener(
+    "touchmove",
+    event => {
+
+        if (!event.touches.length)
+            return;
+
+        const touch =
+            event.touches[0];
+
+        /*
+         * Use the touch position as
+         * the current aim position.
+         */
+
+        aimX =
+            touch.clientX;
+
+        aimY =
+            touch.clientY;
+
+    },
+    {
+        passive: true
+    }
+);
+
+
+/* ============================================================
+   SHOOTING
+============================================================ */
+
+let shooting = false;
+
+
+shootButton.addEventListener(
+    "touchstart",
+    event => {
+
+        event.preventDefault();
+
+        shooting = true;
+
+    }
+);
+
+
+shootButton.addEventListener(
+    "touchend",
+    event => {
+
+        event.preventDefault();
+
+        shooting = false;
+
+    }
+);
+
+
+shootButton.addEventListener(
+    "touchcancel",
+    event => {
+
+        event.preventDefault();
+
+        shooting = false;
+
+    }
+);
+
+
+/* ============================================================
+   SEND INPUT
+============================================================ */
+
+setInterval(
+    () => {
+
+        if (
+            socket.readyState !==
+            WebSocket.OPEN
+        ) {
+            return;
+        }
+
+
+        socket.send(
+            JSON.stringify({
+
+                type: "input",
+
+                x: joyX,
+                y: joyY,
+
+                aim_x: aimX,
+                aim_y: aimY,
+
+                shooting: shooting
+
+            })
+        );
+
+    },
+    1000 / 60
+);
+
+
+/* ============================================================
+   CONNECT
+============================================================ */
+
+socket.addEventListener(
+    "open",
+    () => {
+
+        socket.send(
+            JSON.stringify({
+
+                type: "player_info",
+
+                name: "Player",
+
+                weapon: weaponName,
+
+                skin: skinName
+
+            })
+        );
+
+
+        socket.send(
+            JSON.stringify({
+                type: "play"
+            })
+        );
+
+    }
+);
+
+
+/* ============================================================
+   SERVER MESSAGES
+============================================================ */
+
+socket.addEventListener(
+    "message",
+    event => {
+
+        const data =
+            JSON.parse(event.data);
+
+
+        /* --------------------------------
+           WELCOME
+        -------------------------------- */
+
+        if (
+            data.type === "welcome"
+        ) {
+
+            myId =
+                data.id;
+
+        }
+
+
+        /* --------------------------------
+           STATE
+        -------------------------------- */
+
+        if (
+            data.type === "state"
+        ) {
+
+            updateState(data);
+
+        }
+
+
+        /* --------------------------------
+           BULLET
+        -------------------------------- */
+
+        if (
+            data.type === "bullet"
+        ) {
+
+            createBullet(data);
+
+        }
+
+
+        /* --------------------------------
+           MATCH OVER
+        -------------------------------- */
+
+        if (
+            data.type === "match_over"
+        ) {
+
+            showMatchResult(
+                data.winner
+            );
+
+        }
+
+    }
+);
+
+
+/* ============================================================
+   MATCH RESULT
+============================================================ */
+
+function showMatchResult(
+    winnerId
+) {
+
+    /*
+     * Stop controls immediately.
+     */
+
+    shooting = false;
 
     joystickActive = false;
 
     resetJoystick();
 
-});
+
+    /*
+     * Show result.
+     */
+
+    deathScreen.style.display =
+        "flex";
 
 
-/* =========================================
-   AIM
-========================================= */
+    if (
+        winnerId === myId
+    ) {
 
-document.addEventListener("touchmove", e => {
+        resultTitle.textContent =
+            "YOU WIN!";
 
-    if (!e.touches.length) return;
+    } else {
 
-    const t = e.touches[0];
-
-    aimX = t.clientX;
-    aimY = t.clientY;
-
-}, { passive: true });
-
-
-/* =========================================
-   SHOOTING
-========================================= */
-
-let shooting = false;
-
-shootButton.addEventListener("touchstart", e => {
-
-    e.preventDefault();
-
-    shooting = true;
-
-});
-
-shootButton.addEventListener("touchend", e => {
-
-    e.preventDefault();
-
-    shooting = false;
-
-});
-
-
-/* =========================================
-   SEND INPUT
-========================================= */
-
-setInterval(() => {
-
-    if (socket.readyState !== WebSocket.OPEN) {
-        return;
-    }
-
-    socket.send(JSON.stringify({
-
-        type: "input",
-
-        x: joyX,
-        y: joyY,
-
-        aim_x: aimX,
-        aim_y: aimY,
-
-        shooting: shooting
-
-    }));
-
-}, 1000 / 60);
-
-
-/* =========================================
-   CONNECTION
-========================================= */
-
-socket.addEventListener("open", () => {
-
-    socket.send(JSON.stringify({
-
-        type: "player_info",
-
-        name: "Player",
-
-        weapon: weaponName,
-
-        skin: skinName
-
-    }));
-
-    socket.send(JSON.stringify({
-        type: "play"
-    }));
-
-});
-
-
-/* =========================================
-   SERVER MESSAGE
-========================================= */
-
-socket.addEventListener("message", event => {
-
-    const data =
-        JSON.parse(event.data);
-
-
-    /* -------------------------
-       YOUR ID
-    ------------------------- */
-
-    if (data.type === "welcome") {
-
-        myId = data.id;
+        resultTitle.textContent =
+            "YOU DIED";
 
     }
 
 
-    /* -------------------------
-       STATE
-    ------------------------- */
-
-    if (data.type === "state") {
-
-        updateState(data);
-
-    }
+    resultText.textContent =
+        "Returning to lobby...";
 
 
-    /* -------------------------
-       BULLET
-    ------------------------- */
+    /*
+     * Both players return
+     * to the main menu.
+     */
 
-    if (data.type === "bullet") {
+    setTimeout(
+        () => {
 
-        createBullet(data);
+            window.location.href =
+                "index.html";
 
-    }
+        },
+        2000
+    );
 
-
-    /* -------------------------
-       DEATH
-    ------------------------- */
-
-    if (data.type === "death") {
-
-        if (data.id === myId) {
-
-            deathScreen.style.display =
-                "flex";
-        }
-
-    }
+}
 
 
-    /* -------------------------
-       RESPAWN
-    ------------------------- */
-
-    if (data.type === "respawn") {
-
-        if (data.id === myId) {
-
-            deathScreen.style.display =
-                "none";
-        }
-
-    }
-
-});
-
-
-/* =========================================
+/* ============================================================
    STATE
-========================================= */
+============================================================ */
 
 function updateState(data) {
 
-    for (const id in players) {
+    /*
+     * Mark existing players unseen.
+     */
 
-        players[id].seen = false;
+    for (
+        const id in players
+    ) {
+
+        players[id].seen =
+            false;
+
     }
 
 
-    for (const player of data.players) {
+    /*
+     * Update server players.
+     */
+
+    for (
+        const player of data.players
+    ) {
 
         let element =
             players[player.id];
@@ -615,10 +817,12 @@ function updateState(data) {
 
             players[player.id] =
                 element;
+
         }
 
 
-        element.seen = true;
+        element.seen =
+            true;
 
 
         element.x =
@@ -643,7 +847,13 @@ function updateState(data) {
         renderPlayer(element);
 
 
-        if (player.id === myId) {
+        /*
+         * Update our HP.
+         */
+
+        if (
+            player.id === myId
+        ) {
 
             updateHP(
                 player.hp,
@@ -655,9 +865,18 @@ function updateState(data) {
     }
 
 
-    for (const id in players) {
+    /*
+     * Remove players no longer
+     * sent by the server.
+     */
 
-        if (!players[id].seen) {
+    for (
+        const id in players
+    ) {
+
+        if (
+            !players[id].seen
+        ) {
 
             players[id].element.remove();
 
@@ -670,57 +889,79 @@ function updateState(data) {
 }
 
 
-/* =========================================
+/* ============================================================
    CREATE PLAYER
-========================================= */
+============================================================ */
 
-function createPlayer(player) {
+function createPlayer(
+    player
+) {
 
     const element =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
     element.className =
         "player";
 
 
     const skin =
-        document.createElement("img");
+        document.createElement(
+            "img"
+        );
 
     skin.className =
         "skin";
+
 
     skin.src =
         `assets/skins/${player.skin}.png`;
 
 
     const weapon =
-        document.createElement("img");
+        document.createElement(
+            "img"
+        );
 
     weapon.className =
         "weapon";
+
 
     weapon.src =
         `assets/weapons/${player.weapon}.png`;
 
 
-    element.appendChild(skin);
-    element.appendChild(weapon);
+    element.appendChild(
+        skin
+    );
 
-    world.appendChild(element);
+    element.appendChild(
+        weapon
+    );
+
+
+    world.appendChild(
+        element
+    );
 
 
     return {
 
         element,
+
         skin,
+
         weapon,
 
         x: player.x,
+
         y: player.y,
 
         angle: 0,
 
         hp: player.hp,
+
         maxHp: player.max_hp,
 
         alive: true,
@@ -732,11 +973,13 @@ function createPlayer(player) {
 }
 
 
-/* =========================================
+/* ============================================================
    RENDER PLAYER
-========================================= */
+============================================================ */
 
-function renderPlayer(player) {
+function renderPlayer(
+    player
+) {
 
     player.element.style.left =
         `${player.x}px`;
@@ -744,8 +987,10 @@ function renderPlayer(player) {
     player.element.style.top =
         `${player.y}px`;
 
+
     player.element.style.transform =
         `translate(-50%, -50%) rotate(${player.angle}rad)`;
+
 
     player.element.style.display =
         player.alive
@@ -755,32 +1000,54 @@ function renderPlayer(player) {
 }
 
 
-/* =========================================
+/* ============================================================
    HP
-========================================= */
+============================================================ */
 
-function updateHP(hp, maxHp) {
+function updateHP(
+    hp,
+    maxHp
+) {
 
     hp =
-        Math.max(0, hp);
+        Math.max(
+            0,
+            hp
+        );
+
 
     hpText.textContent =
         `${Math.ceil(hp)} / ${maxHp}`;
 
+
+    const percentage =
+        Math.max(
+            0,
+            Math.min(
+                100,
+                hp / maxHp * 100
+            )
+        );
+
+
     hpFill.style.width =
-        `${Math.max(0, Math.min(100, hp / maxHp * 100))}%`;
+        `${percentage}%`;
 
 }
 
 
-/* =========================================
-   BULLET VISUAL
-========================================= */
+/* ============================================================
+   BULLET
+============================================================ */
 
-function createBullet(data) {
+function createBullet(
+    data
+) {
 
     const bullet =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
     bullet.className =
         "bullet";
@@ -807,15 +1074,13 @@ function createBullet(data) {
         `${data.y}px`;
 
 
-    world.appendChild(bullet);
+    world.appendChild(
+        bullet
+    );
 
 
     const distance =
         data.range * 120;
-
-
-    const speed =
-        data.speed;
 
 
     const start =
@@ -829,30 +1094,46 @@ function createBullet(data) {
 
 
         const travelled =
-            speed * elapsed;
+            data.speed * elapsed;
 
 
-        if (travelled >= distance) {
+        if (
+            travelled >= distance
+        ) {
 
             bullet.remove();
 
             return;
+
         }
 
 
         bullet.style.left =
-            `${data.x + Math.cos(data.angle) * travelled}px`;
+            `${
+                data.x +
+                Math.cos(data.angle) *
+                travelled
+            }px`;
+
 
         bullet.style.top =
-            `${data.y + Math.sin(data.angle) * travelled}px`;
+            `${
+                data.y +
+                Math.sin(data.angle) *
+                travelled
+            }px`;
 
 
-        requestAnimationFrame(animate);
+        requestAnimationFrame(
+            animate
+        );
 
     }
 
 
-    requestAnimationFrame(animate);
+    requestAnimationFrame(
+        animate
+    );
 
 }
 
