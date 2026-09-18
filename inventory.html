@@ -1,26 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    >
 
     <title>inventory</title>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
+    <!-- GAME DATA -->
+    <script src="data/weapons.js"></script>
+    <script src="data/skins.js"></script>
+
+
     <style>
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        html, body {
+        html,
+        body {
             width: 100%;
             height: 100%;
             overflow: hidden;
+
             background: black;
             color: white;
+
             font-family: Arial, sans-serif;
         }
 
@@ -28,7 +43,9 @@
             width: 100vw;
             height: 100vh;
 
-            background-image: url("assets/ui/background.png");
+            background-image:
+                url("assets/ui/background.png");
+
             background-position: center;
             background-size: cover;
             background-repeat: no-repeat;
@@ -36,10 +53,15 @@
             display: flex;
         }
 
-        /* BACK BUTTON */
+
+        /* =========================
+           BACK BUTTON
+        ========================= */
 
         #back {
+
             position: fixed;
+
             top: 15px;
             left: 15px;
 
@@ -56,40 +78,49 @@
             font-weight: bold;
 
             cursor: pointer;
+
             z-index: 10;
         }
 
         #back:active {
+
             background: white;
             color: black;
+
         }
 
-        /* LEFT SIDE */
+
+        /* =========================
+           LEFT SIDE
+        ========================= */
 
         #character-preview {
+
             width: 40%;
             height: 100%;
 
             display: flex;
+
             align-items: center;
             justify-content: center;
+
         }
 
-        /*
-            This wrapper keeps the character exactly the same size.
-            The weapon rotates around the character.
-        */
 
         #preview-rig {
+
             position: relative;
 
             width: 256px;
             height: 256px;
 
             transform-origin: center center;
+
         }
 
+
         #character {
+
             position: absolute;
 
             left: 0;
@@ -99,9 +130,12 @@
             height: 256px;
 
             object-fit: contain;
+
         }
 
+
         #weapon {
+
             position: absolute;
 
             width: 64px;
@@ -113,29 +147,45 @@
             object-fit: contain;
 
             pointer-events: none;
+
         }
 
-        /* RIGHT SIDE */
+
+        /* =========================
+           RIGHT SIDE
+        ========================= */
 
         #inventory {
+
             width: 60%;
             height: 100%;
 
             padding: 25px;
 
             display: flex;
+
             flex-direction: column;
+
         }
 
-        /* TABS */
+
+        /* =========================
+           TABS
+        ========================= */
 
         #tabs {
+
             display: flex;
+
             gap: 10px;
+
             margin-bottom: 15px;
+
         }
 
+
         .tab {
+
             flex: 1;
 
             padding: 15px;
@@ -150,118 +200,369 @@
             font-weight: bold;
 
             cursor: pointer;
+
         }
+
 
         .tab.active {
+
             background: white;
             color: black;
+
         }
 
-        /* ITEM LIST */
+
+        /* =========================
+           ITEMS
+        ========================= */
 
         #items {
+
             flex: 1;
+
             overflow-y: auto;
+
             padding-right: 8px;
+
         }
+
 
         .rarity {
+
             margin-bottom: 20px;
+
         }
+
 
         .rarity-title {
+
             font-size: 20px;
             font-weight: bold;
+
             margin-bottom: 5px;
+
         }
+
 
         .divider {
+
             color: #aaa;
+
             margin-bottom: 10px;
+
             white-space: nowrap;
+
         }
+
 
         .items-row {
+
             display: flex;
+
             flex-wrap: wrap;
+
             gap: 10px;
+
         }
 
+
         .item {
+
             width: 90px;
             height: 90px;
 
             background: #181818;
+
             border: 2px solid #555;
+
             border-radius: 8px;
 
             display: flex;
+
             align-items: center;
             justify-content: center;
 
             cursor: pointer;
+
+            position: relative;
+
         }
+
 
         .item:hover {
+
             border-color: white;
+
         }
+
 
         .item img {
+
             max-width: 80%;
             max-height: 80%;
+
             object-fit: contain;
+
         }
 
-        /* MOBILE */
+
+        /* =========================
+           LEVEL
+        ========================= */
+
+        .item-level {
+
+            position: absolute;
+
+            right: 4px;
+            bottom: 3px;
+
+            font-size: 13px;
+            font-weight: bold;
+
+            color: white;
+
+            text-shadow:
+                1px 1px 2px black;
+
+        }
+
+
+        /* =========================
+           POPUP
+        ========================= */
+
+        #popup {
+
+            position: fixed;
+
+            left: 50%;
+            top: 50%;
+
+            transform:
+                translate(-50%, -50%);
+
+            width: min(420px, 85vw);
+
+            max-height: 80vh;
+
+            padding: 25px;
+
+            background: #181818;
+
+            border: 3px solid white;
+
+            border-radius: 12px;
+
+            z-index: 100;
+
+            display: none;
+
+            overflow-y: auto;
+
+            box-shadow:
+                0 0 30px black;
+
+        }
+
+
+        #popup.show {
+
+            display: block;
+
+        }
+
+
+        #popup-title {
+
+            font-size: 28px;
+
+            font-weight: bold;
+
+            margin-bottom: 5px;
+
+        }
+
+
+        #popup-rarity {
+
+            color: #aaa;
+
+            font-size: 16px;
+
+            margin-bottom: 20px;
+
+        }
+
+
+        #popup-stats {
+
+            font-size: 18px;
+
+            line-height: 1.7;
+
+            margin-bottom: 20px;
+
+        }
+
+
+        .popup-button {
+
+            width: 100%;
+
+            padding: 12px;
+
+            background: white;
+            color: black;
+
+            border: none;
+
+            border-radius: 8px;
+
+            font-size: 18px;
+
+            font-weight: bold;
+
+            cursor: pointer;
+
+            margin-top: 8px;
+
+        }
+
+
+        .popup-button:active {
+
+            background: #aaa;
+
+        }
+
+
+        #close-popup {
+
+            background: #333;
+            color: white;
+
+        }
+
+
+        #upgrade-button {
+
+            background: #4caf50;
+            color: white;
+
+        }
+
+
+        #upgrade-button:disabled {
+
+            background: #444;
+            color: #888;
+
+            cursor: default;
+
+        }
+
+
+        /* =========================
+           MOBILE
+        ========================= */
 
         @media (max-width: 700px) {
 
             #character-preview {
+
                 width: 35%;
+
             }
+
 
             #inventory {
+
                 width: 65%;
+
                 padding: 15px;
+
             }
+
 
             #preview-rig {
+
                 width: 180px;
                 height: 180px;
+
             }
+
 
             #character {
+
                 width: 180px;
                 height: 180px;
+
             }
 
+
             #weapon {
+
                 width: 64px;
                 height: 64px;
 
                 left: 150px;
                 top: 58px;
+
             }
+
 
             .item {
+
                 width: 65px;
                 height: 65px;
+
             }
 
+
             .tab {
+
                 padding: 10px;
+
                 font-size: 16px;
+
             }
+
+
+            #popup {
+
+                width: 85vw;
+
+                padding: 20px;
+
+            }
+
         }
+
     </style>
+
 </head>
+
 
 <body>
 
-    <!-- BACK -->
-    <button id="back" onclick="goBack()"><-</button>
 
-    <!-- CHARACTER PREVIEW -->
+    <!-- =========================
+         BACK
+    ========================= -->
+
+    <button
+        id="back"
+        onclick="goBack()"
+    >
+        <-
+    </button>
+
+
+    <!-- =========================
+         CHARACTER PREVIEW
+    ========================= -->
+
     <div id="character-preview">
 
         <div id="preview-rig">
@@ -282,10 +583,16 @@
 
     </div>
 
-    <!-- INVENTORY -->
+
+    <!-- =========================
+         INVENTORY
+    ========================= -->
+
     <div id="inventory">
 
+
         <!-- TABS -->
+
         <div id="tabs">
 
             <button
@@ -294,6 +601,7 @@
             >
                 Skins
             </button>
+
 
             <button
                 class="tab"
@@ -304,24 +612,79 @@
 
         </div>
 
+
         <!-- ITEMS -->
+
         <div id="items"></div>
 
     </div>
 
+
+    <!-- =========================
+         POPUP
+    ========================= -->
+
+    <div id="popup">
+
+        <div id="popup-title">
+            Item
+        </div>
+
+
+        <div id="popup-rarity">
+            Common
+        </div>
+
+
+        <div id="popup-stats"></div>
+
+
+        <button
+            id="upgrade-button"
+            class="popup-button"
+            onclick="upgradeWeapon()"
+        >
+            Upgrade
+        </button>
+
+
+        <button
+            id="close-popup"
+            class="popup-button"
+            onclick="closePopup()"
+        >
+            Close
+        </button>
+
+    </div>
+
+
     <script>
 
-        const tg = window.Telegram.WebApp;
+
+        /* =========================
+           TELEGRAM
+        ========================= */
+
+        const tg =
+            window.Telegram.WebApp;
+
 
         tg.ready();
         tg.expand();
 
+
         if (tg.BackButton) {
+
             tg.BackButton.hide();
+
         }
 
+
         if (tg.SettingsButton) {
+
             tg.SettingsButton.hide();
+
         }
 
 
@@ -330,6 +693,7 @@
         ========================= */
 
         const rarities = [
+
             "Common",
             "Uncommon",
             "Rare",
@@ -338,144 +702,633 @@
             "Legendary",
             "Ultra",
             "Special"
+
         ];
 
 
-        function createItem(type, rarity) {
+        let popupType = null;
+        let popupId = null;
 
-            /* STARTER SKIN */
 
-            if (type === "skins" && rarity === "Common") {
+        /* =========================
+           WEAPON LEVEL
+        ========================= */
 
-                const item = document.createElement("div");
+        function getWeaponLevel(id) {
 
-                item.className = "item";
+            return parseInt(
+                localStorage.getItem(
+                    "weaponLevel_" + id
+                )
+            ) || 1;
 
-                const img = document.createElement("img");
+        }
 
-                img.src = "assets/skins/starter.png";
-                img.alt = "Starter";
 
-                item.appendChild(img);
+        function setWeaponLevel(
+            id,
+            level
+        ) {
 
-                item.onclick = () => {
+            localStorage.setItem(
+                "weaponLevel_" + id,
+                level
+            );
 
-                    localStorage.setItem(
-                        "selectedSkin",
-                        "assets/skins/starter.png"
-                    );
+        }
 
-                    updatePreview();
-                };
 
-                return item;
+        /* =========================
+           CREATE ITEM
+        ========================= */
+
+        function createItem(
+            type,
+            rarity
+        ) {
+
+
+            /* =====================
+               SKINS
+            ===================== */
+
+            if (type === "skins") {
+
+                for (
+                    const id in SKINS
+                ) {
+
+                    const skin =
+                        SKINS[id];
+
+
+                    if (
+                        skin.rarity !==
+                        rarity
+                    ) {
+
+                        continue;
+
+                    }
+
+
+                    const item =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    item.className =
+                        "item";
+
+
+                    const img =
+                        document.createElement(
+                            "img"
+                        );
+
+
+                    img.src =
+                        "assets/skins/" +
+                        id +
+                        ".png";
+
+
+                    img.alt =
+                        skin.name;
+
+
+                    item.appendChild(img);
+
+
+                    item.onclick = () => {
+
+                        localStorage.setItem(
+                            "selectedSkin",
+                            "assets/skins/" +
+                            id +
+                            ".png"
+                        );
+
+
+                        updatePreview();
+
+                        openPopup(
+                            "skin",
+                            id
+                        );
+
+                    };
+
+
+                    return item;
+
+                }
+
             }
 
 
-            /* PISTOL */
+            /* =====================
+               WEAPONS
+            ===================== */
 
-            if (type === "weapons" && rarity === "Common") {
+            if (type === "weapons") {
 
-                const item = document.createElement("div");
+                for (
+                    const id in WEAPONS
+                ) {
 
-                item.className = "item";
+                    const weapon =
+                        WEAPONS[id];
 
-                const img = document.createElement("img");
 
-                img.src = "assets/weapons/pistol.png";
-                img.alt = "Pistol";
+                    if (
+                        weapon.rarity !==
+                        rarity
+                    ) {
 
-                item.appendChild(img);
+                        continue;
 
-                item.onclick = () => {
+                    }
 
-                    localStorage.setItem(
-                        "selectedWeapon",
-                        "assets/weapons/pistol.png"
-                    );
 
-                    updatePreview();
-                };
+                    const item =
+                        document.createElement(
+                            "div"
+                        );
 
-                return item;
+
+                    item.className =
+                        "item";
+
+
+                    const img =
+                        document.createElement(
+                            "img"
+                        );
+
+
+                    img.src =
+                        weapon.sprite ||
+                        "assets/weapons/" +
+                        id +
+                        ".png";
+
+
+                    img.alt =
+                        weapon.name;
+
+
+                    item.appendChild(img);
+
+
+                    const level =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    level.className =
+                        "item-level";
+
+
+                    level.textContent =
+                        "Lv." +
+                        getWeaponLevel(id);
+
+
+                    item.appendChild(level);
+
+
+                    item.onclick = () => {
+
+                        localStorage.setItem(
+                            "selectedWeapon",
+                            weapon.sprite ||
+                            "assets/weapons/" +
+                            id +
+                            ".png"
+                        );
+
+
+                        updatePreview();
+
+
+                        openPopup(
+                            "weapon",
+                            id
+                        );
+
+                    };
+
+
+                    return item;
+
+                }
+
             }
 
 
             return null;
+
         }
 
 
-        function showCategory(category) {
+        /* =========================
+           SHOW CATEGORY
+        ========================= */
 
-            const container = document.getElementById("items");
+        function showCategory(
+            category
+        ) {
 
-            container.innerHTML = "";
-
-
-            /* Active tab */
-
-            document.querySelectorAll(".tab").forEach(button => {
-                button.classList.remove("active");
-            });
+            const container =
+                document.getElementById(
+                    "items"
+                );
 
 
-            if (category === "skins") {
+            container.innerHTML =
+                "";
+
+
+            document
+                .querySelectorAll(".tab")
+                .forEach(button => {
+
+                    button.classList.remove(
+                        "active"
+                    );
+
+                });
+
+
+            if (
+                category ===
+                "skins"
+            ) {
 
                 document
-                    .querySelectorAll(".tab")[0]
-                    .classList.add("active");
+                    .querySelectorAll(
+                        ".tab"
+                    )[0]
+                    .classList.add(
+                        "active"
+                    );
 
-            } else {
+            }
+            else {
 
                 document
-                    .querySelectorAll(".tab")[1]
-                    .classList.add("active");
+                    .querySelectorAll(
+                        ".tab"
+                    )[1]
+                    .classList.add(
+                        "active"
+                    );
 
             }
 
 
-            /* Rarities */
+            rarities.forEach(
+                rarity => {
 
-            rarities.forEach(rarity => {
+                    const item =
+                        createItem(
+                            category,
+                            rarity
+                        );
 
-                const item = createItem(category, rarity);
 
-                if (!item) {
-                    return;
+                    if (!item) {
+
+                        return;
+
+                    }
+
+
+                    const section =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    section.className =
+                        "rarity";
+
+
+                    const title =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    title.className =
+                        "rarity-title";
+
+
+                    title.textContent =
+                        rarity;
+
+
+                    const divider =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    divider.className =
+                        "divider";
+
+
+                    divider.textContent =
+                        "____________________________";
+
+
+                    const row =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    row.className =
+                        "items-row";
+
+
+                    row.appendChild(
+                        item
+                    );
+
+
+                    section.appendChild(
+                        title
+                    );
+
+
+                    section.appendChild(
+                        divider
+                    );
+
+
+                    section.appendChild(
+                        row
+                    );
+
+
+                    container.appendChild(
+                        section
+                    );
+
+                }
+            );
+
+        }
+
+
+        /* =========================
+           POPUP
+        ========================= */
+
+        function openPopup(
+            type,
+            id
+        ) {
+
+            popupType =
+                type;
+
+            popupId =
+                id;
+
+
+            const title =
+                document.getElementById(
+                    "popup-title"
+                );
+
+
+            const rarity =
+                document.getElementById(
+                    "popup-rarity"
+                );
+
+
+            const stats =
+                document.getElementById(
+                    "popup-stats"
+                );
+
+
+            const upgrade =
+                document.getElementById(
+                    "upgrade-button"
+                );
+
+
+            if (
+                type ===
+                "weapon"
+            ) {
+
+                const weapon =
+                    WEAPONS[id];
+
+
+                const level =
+                    getWeaponLevel(id);
+
+
+                title.textContent =
+                    weapon.name;
+
+
+                rarity.textContent =
+                    weapon.rarity +
+                    " • Level " +
+                    level +
+                    "/9";
+
+
+                stats.innerHTML =
+
+                    "Damage: " +
+                    weapon.damage +
+                    "<br>" +
+
+                    "Cooldown: " +
+                    weapon.cooldown +
+                    "s<br>" +
+
+                    "Bullets: " +
+                    weapon.bullets +
+                    "<br>" +
+
+                    "Spread: " +
+                    weapon.spread +
+                    "<br>" +
+
+                    "Range: " +
+                    weapon.range +
+                    "× player size<br>" +
+
+                    "Bullet size: " +
+                    (weapon.bulletSize * 100) +
+                    "% of player";
+
+
+                upgrade.style.display =
+                    "block";
+
+
+                if (
+                    level >= 9
+                ) {
+
+                    upgrade.textContent =
+                        "MAX LEVEL";
+
+
+                    upgrade.disabled =
+                        true;
+
+                }
+                else {
+
+                    upgrade.textContent =
+                        "Upgrade";
+
+
+                    upgrade.disabled =
+                        false;
+
                 }
 
-
-                const section = document.createElement("div");
-
-                section.className = "rarity";
+            }
 
 
-                const title = document.createElement("div");
+            else if (
+                type ===
+                "skin"
+            ) {
 
-                title.className = "rarity-title";
-                title.textContent = rarity;
-
-
-                const divider = document.createElement("div");
-
-                divider.className = "divider";
-                divider.textContent = "____________________________";
+                const skin =
+                    SKINS[id];
 
 
-                const row = document.createElement("div");
+                title.textContent =
+                    skin.name;
 
-                row.className = "items-row";
+
+                rarity.textContent =
+                    skin.rarity;
 
 
-                row.appendChild(item);
+                stats.innerHTML =
 
-                section.appendChild(title);
-                section.appendChild(divider);
-                section.appendChild(row);
+                    "HP: " +
+                    skin.hp +
+                    "<br>" +
 
-                container.appendChild(section);
+                    "Regeneration: +" +
+                    skin.regeneration.amount +
+                    " HP every " +
+                    skin.regeneration.delay +
+                    "s";
 
-            });
+
+                upgrade.style.display =
+                    "none";
+
+            }
+
+
+            document
+                .getElementById(
+                    "popup"
+                )
+                .classList.add(
+                    "show"
+                );
+
+        }
+
+
+        /* =========================
+           CLOSE POPUP
+        ========================= */
+
+        function closePopup() {
+
+            document
+                .getElementById(
+                    "popup"
+                )
+                .classList.remove(
+                    "show"
+                );
+
+
+            popupType =
+                null;
+
+            popupId =
+                null;
+
+        }
+
+
+        /* =========================
+           UPGRADE
+        ========================= */
+
+        function upgradeWeapon() {
+
+            if (
+                popupType !==
+                "weapon"
+            ) {
+
+                return;
+
+            }
+
+
+            const level =
+                getWeaponLevel(
+                    popupId
+                );
+
+
+            if (
+                level >= 9
+            ) {
+
+                return;
+
+            }
+
+
+            setWeaponLevel(
+                popupId,
+                level + 1
+            );
+
+
+            openPopup(
+                "weapon",
+                popupId
+            );
+
+
+            /*
+                Refresh inventory so
+                the level displayed on
+                the item updates.
+            */
+
+            showCategory(
+                "weapons"
+            );
 
         }
 
@@ -487,17 +1340,35 @@
         function updatePreview() {
 
             const skin =
-                localStorage.getItem("selectedSkin")
-                || "assets/skins/starter.png";
+                localStorage.getItem(
+                    "selectedSkin"
+                )
+                ||
+                "assets/skins/starter.png";
+
 
             const weapon =
-                localStorage.getItem("selectedWeapon")
-                || "assets/weapons/pistol.png";
+                localStorage.getItem(
+                    "selectedWeapon"
+                )
+                ||
+                "assets/weapons/pistol.png";
 
 
-            document.getElementById("character").src = skin;
+            document
+                .getElementById(
+                    "character"
+                )
+                .src =
+                skin;
 
-            document.getElementById("weapon").src = weapon;
+
+            document
+                .getElementById(
+                    "weapon"
+                )
+                .src =
+                weapon;
 
         }
 
@@ -507,31 +1378,48 @@
         ========================= */
 
         const rig =
-            document.getElementById("preview-rig");
+            document.getElementById(
+                "preview-rig"
+            );
 
 
-        function aimAt(x, y) {
+        function aimAt(
+            x,
+            y
+        ) {
 
             const rect =
                 rig.getBoundingClientRect();
 
 
             const centerX =
-                rect.left + rect.width / 2;
+                rect.left +
+                rect.width / 2;
+
 
             const centerY =
-                rect.top + rect.height / 2;
+                rect.top +
+                rect.height / 2;
 
 
             const dx =
-                x - centerX;
+                x -
+                centerX;
+
 
             const dy =
-                y - centerY;
+                y -
+                centerY;
 
 
             const angle =
-                Math.atan2(dy, dx) * 180 / Math.PI;
+                Math.atan2(
+                    dy,
+                    dx
+                )
+                *
+                180 /
+                Math.PI;
 
 
             rig.style.transform =
@@ -542,14 +1430,17 @@
 
         /* PC */
 
-        document.addEventListener("mousemove", event => {
+        document.addEventListener(
+            "mousemove",
+            event => {
 
-            aimAt(
-                event.clientX,
-                event.clientY
-            );
+                aimAt(
+                    event.clientX,
+                    event.clientY
+                );
 
-        });
+            }
+        );
 
 
         /* PHONE */
@@ -558,12 +1449,18 @@
             "touchstart",
             event => {
 
-                if (event.touches.length === 0) {
+                if (
+                    event.touches.length === 0
+                ) {
+
                     return;
+
                 }
+
 
                 const touch =
                     event.touches[0];
+
 
                 aimAt(
                     touch.clientX,
@@ -571,7 +1468,9 @@
                 );
 
             },
-            { passive: true }
+            {
+                passive: true
+            }
         );
 
 
@@ -579,12 +1478,18 @@
             "touchmove",
             event => {
 
-                if (event.touches.length === 0) {
+                if (
+                    event.touches.length === 0
+                ) {
+
                     return;
+
                 }
+
 
                 const touch =
                     event.touches[0];
+
 
                 aimAt(
                     touch.clientX,
@@ -592,7 +1497,9 @@
                 );
 
             },
-            { passive: true }
+            {
+                passive: true
+            }
         );
 
 
@@ -609,21 +1516,14 @@
 
 
         /* =========================
-           START
-        ========================= */
-
-        updatePreview();
-
-        showCategory("skins");
-
-
-        /* =========================
            FULLSCREEN
         ========================= */
 
         function fullscreen() {
 
-            if (tg.requestFullscreen) {
+            if (
+                tg.requestFullscreen
+            ) {
 
                 tg.requestFullscreen();
 
@@ -632,16 +1532,19 @@
         }
 
 
-        setTimeout(() => {
+        setTimeout(
+            () => {
 
-            fullscreen();
+                fullscreen();
 
-        }, 500);
+            },
+            500
+        );
 
 
         tg.onEvent(
             "fullscreenFailed",
-            (data) => {
+            data => {
 
                 console.log(
                     "Fullscreen failed:",
@@ -654,7 +1557,7 @@
 
         tg.onEvent(
             "fullscreenChanged",
-            (data) => {
+            data => {
 
                 console.log(
                     "Fullscreen:",
@@ -664,7 +1567,19 @@
             }
         );
 
+
+        /* =========================
+           START
+        ========================= */
+
+        updatePreview();
+
+        showCategory(
+            "skins"
+        );
+
     </script>
 
 </body>
+
 </html>
